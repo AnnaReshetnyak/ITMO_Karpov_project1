@@ -1,73 +1,89 @@
 import bcrypt
 from datetime import datetime
 from typing import List, Dict, Optional
+from uuid import uuid4
+
+class TransactionType:
+    DEPOSIT = "DEPOSIT"
+    WITHDRAWAL = "WITHDRAWAL"
+
+class Transaction:
+    def __init__(self, amount: float, transaction_type: str):
+        self.id = str(uuid4())
+        self.timestamp = datetime.now()
+        self.amount = amount
+        self.type = transaction_type
+
+    def to_dict(self) -> Dict:
+        return {
+            "id": self.id,
+            "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "amount": self.amount,
+            "type": self.type
+        }
+
+class TransactionHistory:
+    def __init__(self, user_id: int):
+        self.user_id = user_id
+        self.transactions: List[Transaction] = []
+
+    def add_transaction(self, transaction: Transaction) -> None:
+        self.transactions.append(transaction)
+
+    def get_history(self, limit: Optional[int] = None) -> List[Dict]:
+        sorted_transactions = sorted(
+            self.transactions,
+            key=lambda t: t.timestamp,
+            reverse=True
+        )
+        return [t.to_dict() for t in sorted_transactions[:limit]]
 
 class Balance:
-    def __init__(self, user_id: int, initial_amount: float = 0.0):
-        self.__user_id = user_id
-        self.__amount = initial_amount
+    def __init__(self, transaction_history: TransactionHistory):
+        self.amount: float = 0.0
+        self.transaction_history = transaction_history
 
     def add_funds(self, amount: float) -> None:
         if amount <= 0:
             raise ValueError("Сумма должна быть положительной")
-        self.__amount += amount
+        self.amount += amount
+        self.transaction_history.add_transaction(
+            Transaction(amount, TransactionType.DEPOSIT)
+        )
 
     def deduct_funds(self, amount: float) -> None:
         if amount <= 0:
             raise ValueError("Сумма должна быть положительной")
-        if self.__amount < amount:
+        if self.amount < amount:
             raise ValueError("Недостаточно средств")
-        self.__amount -= amount
-
-    @property
-    def amount(self) -> float:
-        return self.__amount
+        self.amount -= amount
+        self.transaction_history.add_transaction(
+            Transaction(amount, TransactionType.WITHDRAWAL)
+        )
 
 class User:
     def __init__(self, user_id: int, username: str, email: str, password: str):
-        self.__user_id = user_id
-        self.__username = username
-        self.__email = email
-        self.__password_hash = self._hash_password(password)
-        self.__balance = Balance(user_id=user_id)  # Объект Balance
-        self.__transactions: List[Transaction] = []
-
-    @property
-    def balance(self) -> Balance:
-        return self.__balance
+        self._user_id = user_id
+        self._username = username
+        self._email = email
+        self._password_hash = self._hash_password(password)
+        self.transaction_history = TransactionHistory(user_id)
+        self.balance = Balance(self.transaction_history)
 
     @property
     def user_id(self) -> int:
-        return self.__user_id
+        return self._user_id
 
     def _hash_password(self, password: str) -> bytes:
         return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
     def check_password(self, password: str) -> bool:
-        return bcrypt.checkpw(password.encode("utf-8"), self.__password_hash)
+        return bcrypt.checkpw(password.encode("utf-8"), self._password_hash)
 
 class Admin(User):
-    def __init__(self, user_id: int, username: str, email: str, password: str):
-        super().__init__(user_id, username, email, password)
-        self.__is_admin = True
+    def view_user_history(self, user: User) -> List[Dict]:
+        return user.transaction_history.get_history()
 
-    def view_all_transactions(self, users: List[User]) -> None:
-        for user in users:
-            print(f"История пользователя {user.user_id}: {user.transactions}")
-
-class Transaction:
-    def __init__(self, amount: float, transaction_type: str):
-        self.__timestamp = datetime.now()
-        self.__amount = amount
-        self.__type = transaction_type
-
-    @property
-    def details(self) -> Dict:
-        return {
-            "type": self.__type,
-            "amount": self.__amount,
-            "timestamp": self.__timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        }
 
 class MLModel:
     def __init__(self, model_id: int, model_name: str):
@@ -100,25 +116,35 @@ class PredictionHistory:
     def get_history(self, user_id: int) -> list:
         return [record for record in self.__history if record["user_id"] == user_id]
 
-# Пример использования
 if __name__ == "__main__":
-    # Создаем пользователя
-    regular_user = User(
+    # Создание пользователя
+    user1 = User(
         user_id=1,
         username="anna_resh",
-        email="anna_resh@example.com",
-        password="securepass"
+        email="anna_resh@mail.ru",
+        password="qwerty123"
     )
 
-    # Пополняем баланс через объект Balance
-    regular_user.balance.add_funds(150.0)
-    print(f"Баланс: {regular_user.balance.amount}")  # 150.0
+    # Операции с балансом
+    user1.balance.add_funds(1500)
+    user1.balance.deduct_funds(300)
 
-    # Создаем администратора
+    # Получение истории операций
+    print("История операций пользователя:")
+    for transaction in user1.transaction_history.get_history():
+        print(f"{transaction['timestamp']} | {transaction['type']} | {transaction['amount']} ₽")
+
+    # Администратор может просматривать историю
     admin = Admin(
-        user_id=2,
+        user_id=0,
         username="admin",
-        email="admin@example.com",
-        password="adminpass"
+        email="admin@system.ru",
+        password="secureAdminPassword123"
     )
+    print("\nАдмин просматривает историю пользователя:")
+    admin_view = admin.view_user_history(user1)
+    for transaction in admin_view:
+        print(f"{transaction['timestamp']} | {transaction['amount']} ₽")
+
+
 

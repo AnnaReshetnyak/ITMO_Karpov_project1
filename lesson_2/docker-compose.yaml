@@ -1,1 +1,74 @@
+version: '3.8'
 
+services:
+  app:
+    image: python:3.9-slim-buster
+    container_name: balance-app
+    restart: unless-stopped
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    env_file:
+      - .env.app
+    depends_on:
+      database:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: >
+      sh -c "python -m pip install --no-cache-dir -r requirements.txt &&
+      python app.py"
+
+  web-proxy:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://app:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-broker
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: securepassword
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:15672"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  database:
+    image: postgres:13-alpine
+    container_name: postgres-db
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env.db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  default:
+    name: balance-network
+    driver: bridge

@@ -30,7 +30,7 @@ services:
     depends_on:
       - app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://app:8000"]
+      test: [ "CMD", "curl", "-f", "http://app:8000" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -42,11 +42,11 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - ./rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_data:/var/lib/rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: securepassword
-    restart: unless-stopped
+    restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:15672"]
       interval: 30s
@@ -57,16 +57,18 @@ services:
     image: postgres:13-alpine
     container_name: postgres-db
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env.db
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+volumes: 
+  postgres_data:
+  rabbitmq_data:
 
 networks:
   default:

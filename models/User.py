@@ -1,3 +1,5 @@
+import bcrypt
+from typing import List, Dict
 
 class User:
     def __init__(self, user_id: int, username: str, email: str, password: str):
@@ -19,5 +21,5 @@ class User:
         return bcrypt.checkpw(password.encode("utf-8"), self._password_hash)
 
 class Admin(User):
-    def view_user_history(self, user: User) -> list[dict]:
+    def view_user_history(self, user: User) -> List[Dict]:
         return user.transaction_history.get_history()

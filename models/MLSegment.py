@@ -27,4 +27,4 @@ class PredictionHistory:
         self.__history.append(record)
 
     def get_history(self, user_id: int) -> list:
-        return [record for record in self.__history if record["user_id"] == user_i
+        return [record for record in self.__history if record["user_id"] == user_id]

@@ -19,5 +19,5 @@ class User:
         return bcrypt.checkpw(password.encode("utf-8"), self._password_hash)
 
 class Admin(User):
-    def view_user_history(self, user: User) -> List[Dict]:
+    def view_user_history(self, user: User) -> list[dict]:
         return user.transaction_history.get_history()

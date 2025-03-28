@@ -1,7 +1,8 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
+    build: ./app/
     image: python:3.9-slim-buster
     container_name: balance-app
     restart: unless-stopped

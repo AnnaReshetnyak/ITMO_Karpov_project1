@@ -1,26 +1,16 @@
-import bcrypt
-from datetime import datetime
-from typing import List, Dict, Optional
-from uuid import uuid4
+from fastapi import FastAPI, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from database.database import get_session, init_db
 
-class TransactionType:
-    DEPOSIT = "DEPOSIT"
-    WITHDRAWAL = "WITHDRAWAL"
+app = FastAPI()
 
-class Transaction:
-    def __init__(self, amount: float, transaction_type: str):
-        self.id = str(uuid4())
-        self.timestamp = datetime.now()
-        self.amount = amount
-        self.type = transaction_type
+@app.on_event("startup")
+async def on_startup():
+    await init_db()
 
-    def to_dict(self) -> Dict:
-        return {
-            "id": self.id,
-            "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-            "amount": self.amount,
-            "type": self.type
-        }
+@app.get("/")
+async def root(session: AsyncSession = Depends(get_session)):
+    return {"status": "OK"}
 
 class TransactionHistory:
     def __init__(self, user_id: int):

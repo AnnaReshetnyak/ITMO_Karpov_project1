@@ -1,33 +1,22 @@
-from app.database.config import get_db_settings
-from app.database.database import get_session, init_db, engine
-from database.services.crud.user import get_all_users, create_user
-from sqlmodel import Session
-from app.models.User import User
+import pytest
+from sqlmodel import SQLModel, create_engine, Session
+from tests.demo_data import create_demo_users
 
-if __name__ == "__main__":
-    test_user = User(email='test@mail.ru', password='test')
-    test_user_2 = User(email='test@mail.ru', password='test')
-    test_user_3 = User(email='test@mail.ru', password='test')
+@pytest.fixture(scope="module")
+def test_engine():
+    return create_engine("sqlite:///test.db")
 
-    settings = get_db_settings()
-    print(settings.DB_HOST)
-    print(settings.DB_NAME)
+@pytest.fixture(scope="function")
+def test_session(test_engine):
+    SQLModel.metadata.create_all(test_engine)
+    with Session(test_engine) as session:
+        yield session
+    SQLModel.metadata.drop_all(test_engine)
 
-    init_db()
-    print('Init db has been success')
-
-    with Session(engine) as session:
-        create_user(test_user, session)
-        create_user(test_user_2, session)
-        create_user(test_user_3, session)
-        users = get_all_users(session)
-
-    print('-------------------')
-    print(id(test_user) == id(users[0]))
-    print(id(test_user))
-    print(id(users[0]))
-
-    for user in users:
-        print(f'id: {user.id} - {user.email}')
-        print(type(user))
-        print(user.say[0])
+@pytest.fixture(scope="function")
+def demo_session(test_engine):
+    SQLModel.metadata.create_all(test_engine)
+    with Session(test_engine) as session:
+        create_demo_users(session)
+        yield session
+    SQLModel.metadata.drop_all(test_engine)

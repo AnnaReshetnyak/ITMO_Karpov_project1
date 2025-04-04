@@ -2,8 +2,10 @@ version: "3.8"
 
 services:
   app:
+    ports:
+      - "8000:8000"
     build: ./app/
-    image: python:3.9-slim-buster
+    image: balance-app
     container_name: balance-app
     restart: unless-stopped
     volumes:
@@ -11,67 +13,72 @@ services:
     working_dir: /app
     env_file:
       - .env.app
-    depends_on:
-      database:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    command: >
-      sh -c "python -m pip install --no-cache-dir -r requirements.txt &&
-      python app.py"
-
-  web-proxy:
-    image: nginx:alpine
-    container_name: nginx-proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://app:8000" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq-broker
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: securepassword
-    restart: on-failure
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:15672"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
+      - UVICORN_HOST=0.0.0.0
+      - UVICORN_PORT=8000
+    depends_on:
+   #   rabbitmq:
+   #     condition: service_healthy
+      - database
+
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    expose:
+      - "8000"
+    networks:
+      - app-network
+
+#  web-proxy:
+#    image: nginx:alpine
+ #   container_name: nginx-proxy
+ #   ports:
+ #     - "80:80"
+ #     - "443:443"
+ #   volumes:
+ #     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+ #   depends_on:
+ #     - app
+  #  networks:
+ #     - app-network
+ #   healthcheck:
+ #     test: [ "CMD", "curl", "-f", "http://app:8000" ]
+ #     interval: 30s
+ #     timeout: 10s
+  #    retries: 3
+
+ # rabbitmq:
+  #  image: rabbitmq:4.1.0-beta.5-alpine
+   # container_name: rabbitmq-broker
+    #ports:
+     # - "5672:5672"
+      #- "15672:15672"
+    #volumes:
+     # - rabbitmq_data:/var/lib/rabbitmq
+    #environment:
+    #  RABBITMQ_DEFAULT_USER: admin
+    #  RABBITMQ_DEFAULT_PASS: securepassword
+   # restart: on-failure
+  #  healthcheck:
+   #   test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+   #   interval: 10s
+   #   timeout: 5s
+   #   retries: 15
+   #   start_period: 30s
 
   database:
-    image: postgres:13-alpine
-    container_name: postgres-db
+    image: postgres:16-alpine
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    env_file:
-      - .env.db
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - ./postgres_data:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=sa
 
-volumes: 
+volumes:
   postgres_data:
-  rabbitmq_data:
+ # rabbitmq_data:
 
 networks:
-  default:
-    name: balance-network
+  app-network:
     driver: bridge

@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 from datetime import datetime
-
+from pydantic import ConfigDict
 
 
 class UserBase(SQLModel):
@@ -10,41 +10,43 @@ class UserBase(SQLModel):
     is_active: bool = True
     is_admin: bool = False
 
+    model_config = ConfigDict(
+        protected_namespaces=()
+    )
+
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-
-    balance: Optional["Balance"] = Relationship(back_populates="user", sa_relationship_kwargs={'uselist': False})
+    balance: Optional["Balance"] = Relationship(back_populates="user")
     transactions: List["Transaction"] = Relationship(back_populates="user")
     ml_tasks: List["MLTask"] = Relationship(back_populates="owner")
-    predictions: List["PredictionHistory"] = Relationship(back_populates="user")
-
 
 
 class Balance(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     amount: float = Field(default=0.0, ge=0)
-    currency: str = Field(default="USD")
+    currency: str = Field(default="credits")
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
-
     user: Optional[User] = Relationship(back_populates="balance")
     history: List["TransactionHistory"] = Relationship(back_populates="balance")
 
+    model_config = ConfigDict(
+        protected_namespaces=()
+    )
 
-class TransactionBase(SQLModel):
-    amount: float
-    transaction_type: str  # deposit, withdrawal, transfer
-    description: Optional[str] = None
-
-
-class Transaction(TransactionBase, table=True):
+class Transaction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    amount: float
+    transaction_type: str
+    description: Optional[str] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
-
     user: Optional[User] = Relationship(back_populates="transactions")
     history: List["TransactionHistory"] = Relationship(back_populates="transaction")
 
+    model_config = ConfigDict(
+        protected_namespaces=()
+    )
 
 class TransactionHistory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -57,43 +59,33 @@ class TransactionHistory(SQLModel, table=True):
     transaction: Transaction = Relationship(back_populates="history")
     balance: Balance = Relationship(back_populates="history")
 
+    model_config = ConfigDict(
+        protected_namespaces=()
+    )
 
-class MLModelBase(SQLModel):
-    name: str
-    description: Optional[str] = None
-    version: str = "1.0"
-
-
-class MLModel(MLModelBase, table=True):
+class MLModel(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     owner_id: Optional[int] = Field(default=None, foreign_key="user.id")
     tasks: List["MLTask"] = Relationship(back_populates="model")
     predictions: List["PredictionHistory"] = Relationship(back_populates="model")
 
-
-class MLTaskBase(SQLModel):
-    name: str
-    status: str = "pending"  # pending, running, completed, failed
-    input_data: str  # JSON string or reference to storage
+    model_config = ConfigDict(
+        protected_namespaces=()
+    )
 
 
-class MLTask(MLTaskBase, table=True):
+class MLTask(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    status: str = "pending"
+    input_data: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     owner_id: Optional[int] = Field(default=None, foreign_key="user.id")
-    model_id: Optional[int] = Field(default=None, foreign_key="mlmodel.id")
+    ml_model_id: Optional[int] = Field(default=None, foreign_key="mlmodel.id")
 
     owner: Optional[User] = Relationship(back_populates="ml_tasks")
-    model: Optional[MLModel] = Relationship(back_populates="tasks")
+    model: Optional["MLModel"] = Relationship(back_populates="tasks")
 
-
-class PredictionHistory(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
-    model_id: int = Field(foreign_key="mlmodel.id")
-    input_data: str  # JSON-строка
-    result: str  # JSON-строка
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-    user: User = Relationship(back_populates="predictions")
-    model: MLModel = Relationship(back_populates="predictions")
+    model_config = ConfigDict(
+        protected_namespaces=()
+    )

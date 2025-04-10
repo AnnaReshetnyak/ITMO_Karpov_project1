@@ -1,27 +1,45 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, status
 from sqlmodel import Session
-from app.database.services.crud.prediction_history import PredictionHistoryCRUD
+from app.models import User
 from app.database.database import get_session
-from app.schemas import PredictionHistoryCreate, PredictionHistoryOut
+from app.models.MLSegment import MLTask, PredictionHistory
+from app.dependencies import get_current_user
+from app.database.services.crud import PredictionHistoryCRUD, BalanceCRUD
 
-prediction_history_router = APIRouter()
+router = APIRouter(prefix="/predictions", tags=["predictions"])
 
-@prediction_history_router.post("/predictions/", response_model=PredictionHistoryOut)
-def create_prediction(
-    prediction_data: PredictionHistoryCreate,
-    session: Session = Depends(get_session)
+
+@router.post("/", response_model=PredictionHistory)
+async def create_prediction(
+        request: MLTask,
+        session: Session = Depends(get_session),
+        current_user: User = Depends(get_current_user)
 ):
-    crud = PredictionHistoryCRUD(session)
-    return crud.create(prediction_data)
+    # Проверка баланса
+    balance_crud = BalanceCRUD(session)
+    balance = balance_crud.get_by_user(current_user.id)
 
-@prediction_history_router.get("/predictions/{prediction_id}/feedback")
-def add_prediction_feedback(
-    prediction_id: int,
-    feedback: dict,
-    session: Session = Depends(get_session)
-):
-    crud = PredictionHistoryCRUD(session)
-    updated = crud.add_feedback(prediction_id, feedback)
-    if not updated:
-        raise HTTPException(status_code=404, detail="Prediction not found")
-    return updated
+    # Расчет стоимости
+    prediction_cost = calculate_prediction_cost(request)
+
+    if balance.amount < prediction_cost:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Insufficient funds"
+        )
+
+    # Создание предсказания
+    prediction_crud = PredictionHistoryCRUD(session)
+    prediction_data = {
+        "user_id": current_user.id,
+        "request_data": request.dict(),
+        "cost": prediction_cost
+    }
+
+    # Обновление баланса
+    balance_crud.update_balance(
+        current_user.id,
+        balance.amount - prediction_cost
+    )
+
+    return prediction_crud.create(prediction_data)

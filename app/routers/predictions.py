@@ -43,3 +43,17 @@ async def create_prediction(
     )
 
     return prediction_crud.create(prediction_data)
+
+@router.get("/history", response_model=list[PredictionHistory])
+async def get_prediction_history(
+    skip: int = 0,
+    limit: int = 100,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    prediction_crud = PredictionHistoryCRUD(session)
+    return prediction_crud.get_by_user(
+        user_id=current_user.id,
+        skip=skip,
+        limit=limit
+    )

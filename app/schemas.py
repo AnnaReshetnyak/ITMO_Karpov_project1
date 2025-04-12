@@ -51,6 +51,12 @@ class BalanceOut(BalanceBase):
     created_at: datetime
     updated_at: datetime
 
+class TopUpRequest(BaseModel):
+    amount: float = Field(..., gt=0, description="Amount to top up")
+
+class BalanceResponse(BaseModel):
+    balance: float
+
 # --------------------------
 # Transaction Schemas
 # --------------------------

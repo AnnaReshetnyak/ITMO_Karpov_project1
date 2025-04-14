@@ -2,6 +2,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import  AmqpDsn
 from typing import Optional
 
+class Settings(BaseSettings):
+    RABBITMQ_QUEUE: str = "prediction_tasks"
+
+settings = Settings()
+
 class MLServiceSettings(BaseSettings):
     ML_API_KEY: Optional[str] = None
     ML_MODEL_ENDPOINT: str = "https://api.ml-service.com/v1/predict"

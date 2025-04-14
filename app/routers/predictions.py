@@ -1,59 +1,55 @@
-from fastapi import APIRouter, Depends, status
-from sqlmodel import Session
-from app.models import User
-from app.database.database import get_session
-from app.models.MLSegment import MLTask, PredictionHistory
-from app.dependencies import get_current_user
-from app.database.services.crud import PredictionHistoryCRUD, BalanceCRUD
+from fastapi import APIRouter, Depends, HTTPException
+from lesson_2.app.rabbitmq.producer import send_prediction_task
+from lesson_2.app.database.services.crud.prediction import PredictionCRUD
+from lesson_2.app.models import User
+from lesson_2.app.schemas import PredictionRequest, TaskResponse
+from lesson_2.app.dependencies import get_current_user, get_crud
 
-router = APIRouter(prefix="/predictions", tags=["predictions"])
+router = APIRouter()
 
 
-@router.post("/", response_model=PredictionHistory)
+@router.post("/predict", response_model=TaskResponse)
 async def create_prediction(
-        request: MLTask,
-        session: Session = Depends(get_session),
-        current_user: User = Depends(get_current_user)
+        request: PredictionRequest,
+        user: User = Depends(get_current_user),
+        crud: PredictionCRUD = Depends(get_crud)
 ):
-    # Проверка баланса
-    balance_crud = BalanceCRUD(session)
-    balance = balance_crud.get_by_user(current_user.id)
+    try:
+        # Создаем запись задачи
+        task = await crud.create_task(str(user.id), request.input_data)
 
-    # Расчет стоимости
-    prediction_cost = calculate_prediction_cost(request)
+        # Отправляем задачу в очередь
+        await send_prediction_task({
+            "task_id": str(task.id),
+            "input_data": request.input_data
+        })
 
-    if balance.amount < prediction_cost:
+        return TaskResponse(
+            task_id=task.id,
+            status=task.status,
+            created_at=task.created_at
+        )
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail="Insufficient funds"
+            status_code=500,
+            detail=f"Failed to create task: {str(e)}"
         )
 
-    # Создание предсказания
-    prediction_crud = PredictionHistoryCRUD(session)
-    prediction_data = {
-        "user_id": current_user.id,
-        "request_data": request.dict(),
-        "cost": prediction_cost
-    }
 
-    # Обновление баланса
-    balance_crud.update_balance(
-        current_user.id,
-        balance.amount - prediction_cost
-    )
-
-    return prediction_crud.create(prediction_data)
-
-@router.get("/history", response_model=list[PredictionHistory])
-async def get_prediction_history(
-    skip: int = 0,
-    limit: int = 100,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
+@router.get("/tasks/{task_id}", response_model=TaskResponse)
+async def get_task_status(
+        task_id: str,
+        user: User = Depends(get_current_user),
+        crud: PredictionCRUD = Depends(get_crud)
 ):
-    prediction_crud = PredictionHistoryCRUD(session)
-    return prediction_crud.get_by_user(
-        user_id=current_user.id,
-        skip=skip,
-        limit=limit
+    task = await crud.get_task(task_id)
+    if not task or task.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    return TaskResponse(
+        task_id=task.id,
+        status=task.status,
+        result=task.result,
+        created_at=task.created_at,
+        updated_at=task.updated_at
     )

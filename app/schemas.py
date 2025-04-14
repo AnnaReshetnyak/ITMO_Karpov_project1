@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime
+from pydantic import BaseModel
 
 # --------------------------
 # Базовый конфиг для всех схем
@@ -34,9 +35,14 @@ class UserOut(UserBase):
 # --------------------------
 # Balance Schemas
 # --------------------------
+
+class BalanceOperation(BaseModel):
+    amount: float
+    description: str
+
 class BalanceBase(BaseSchema):
     amount: float = Field(..., ge=0, example=1000.0)
-    currency: str = Field(default="USD", max_length=3)
+    currency: str = Field(default="credits", max_length=3)
 
 class BalanceCreate(BalanceBase):
     user_id: int = Field(..., example=1)
@@ -133,6 +139,13 @@ class MLTaskUpdate(BaseSchema):
     result: Optional[Dict[str, Any]] = None
     error_message: Optional[str] = None
 
+class TaskResponse(BaseModel):
+    task_id: str
+    status: str
+    result: dict = None
+    created_at: datetime
+    updated_at: datetime = None
+
 class MLTaskOut(MLTaskBase):
     id: int
     ml_model_id: int = Field(alias="model_id")
@@ -141,6 +154,47 @@ class MLTaskOut(MLTaskBase):
     status: str
     result: Optional[Dict[str, Any]]
     error_message: Optional[str]
+
+# --------------------------
+# Prediction Schemas
+# --------------------------
+
+class PredictionRequest(BaseModel):
+    """Схема для запроса предсказания"""
+    input_data: dict = Field(
+        ...,
+        example={"text": "Sample input text"},
+        description="Входные данные для модели в формате JSON"
+    )
+    model_version: Optional[str] = Field(
+        default="1.0",
+        example="2.1",
+        description="Версия модели (опционально)"
+    )
+
+class PredictionResult(BaseModel):
+    """Схема с результатом предсказания"""
+    prediction: dict
+    model_version: str
+    processing_time: float
+
+class TaskStatus(BaseModel):
+    """Схема статуса задачи"""
+    task_id: str
+    status: str = Field(
+        ...,
+        enum=["pending", "processing", "completed", "failed"],
+        example="pending",
+        description="Текущий статус задачи"
+    )
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    result: Optional[dict] = None
+
+class TaskResponse(TaskStatus):
+    """Полный ответ по задаче"""
+    input_data: dict
+
 # --------------------------
 # Prediction History Schemas
 # --------------------------

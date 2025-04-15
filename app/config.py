@@ -1,11 +1,47 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import  AmqpDsn
 from typing import Optional
+import logging
+
 
 class Settings(BaseSettings):
+    RABBITMQ_URL: str = "amqp://admin:securepassword@rabbitmq-broker/"
     RABBITMQ_QUEUE: str = "prediction_tasks"
 
+
 settings = Settings()
+
+def configure_logging():
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO
+    )
+
+class DatabaseSettings(BaseSettings):
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    POSTGRES_HOST: str = "database"
+    POSTGRES_PORT: int = 5432
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return (
+            f"postgresql+asyncpg://"
+            f"{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False  # Игнорировать регистр переменных
+    )
+
+def get_settings() -> DatabaseSettings:
+    return DatabaseSettings()
+
 
 class MLServiceSettings(BaseSettings):
     ML_API_KEY: Optional[str] = None

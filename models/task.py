@@ -6,6 +6,7 @@ from typing import Optional
 from lesson_2.app.schemas import TaskStatus
 
 class MLTaskBase(SQLModel):
+    cost: float = Field(default=0.0, ge=0)
     user_id: UUID = Field(foreign_key="users.id")
     input_data: dict = Field(sa_column=Column(JSON))
     status: TaskStatus = Field(

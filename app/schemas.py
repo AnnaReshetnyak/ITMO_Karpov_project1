@@ -184,6 +184,8 @@ class TaskStatus(str, Enum):
     FAILED = "failed"
 
 class TaskResponse(BaseModel):
+    cost: float  # Добавляем поле стоимости
+    remaining_balance: float  # Добавляем остаток баланса
     task_id: str
     status: TaskStatus  # Используем Enum
     result: dict | None = None

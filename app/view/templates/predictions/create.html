@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="prediction-form">
+    <h2>Создать новый запрос</h2>
+    <p>Текущий баланс: {{ balance }} $</p>
+
+    <form id="predictionForm" action="/api/predict" method="POST">
+        <div class="form-group">
+            <label for="input_data">Входные данные:</label>
+            <textarea
+                id="input_data"
+                name="input_data"
+                required
+                placeholder='{"text": "Ваш текст для анализа"}'
+            ></textarea>
+        </div>
+
+        <button type="submit">Отправить</button>
+    </form>
+
+    <div id="resultContainer" class="hidden">
+        <h3>Статус задачи: <span id="taskStatus"></span></h3>
+        <div id="predictionResult"></div>
+    </div>
+</div>
+
+<script>
+document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const response = await fetch('/api/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': Bearer ${localStorage.getItem('token')}
+        },
+        body: JSON.stringify({
+            input_data: JSON.parse(formData.get('input_data'))
+        })
+    });
+
+    if (response.ok) {
+        const task = await response.json();
+        monitorTaskStatus(task.task_id);
+    }
+});
+
+async function monitorTaskStatus(taskId) {
+    const statusElement = document.getElementById('taskStatus');
+    const resultElement = document.getElementById('predictionResult');
+
+    const checkStatus = async () => {
+        const response = await fetch(`/api/tasks/${taskId}`);
+        const task = await response.json();
+
+        statusElement.textContent = task.status;
+
+        if (task.status === 'completed') {
+            resultElement.innerHTML = `
+                <h4>Результат:</h4>
+                <pre>${JSON.stringify(task.result, null, 2)}</pre>
+            `;
+            clearInterval(intervalId);
+        } else if (task.status === 'failed') {
+            resultElement.innerHTML = `
+                <p class="error">Ошибка: ${task.result.error}</p>
+            `;
+            clearInterval(intervalId);
+        }
+    };
+
+    document.getElementById('resultContainer').classList.remove('hidden');
+    const intervalId = setInterval(checkStatus, 2000);
+}
+</script>
+{% endblock %}

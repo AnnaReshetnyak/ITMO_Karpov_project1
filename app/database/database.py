@@ -1,18 +1,30 @@
-from sqlmodel import SQLModel, create_engine
-from app.database.config import get_db_settings
+from sqlmodel import create_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
+from lesson_2.app.database.config import get_settings
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-settings = get_db_settings()
-engine = create_engine(settings.DATABASE_URL)
+# Настройка асинхронного движка
+engine = create_engine(
+    get_settings.DATABASE_URL,
+    echo=True,
+    future=True
+)
 
-DATABASE_URL = "postgresql://user:password@database:5432/dbname"
+# Асинхронная сессия
+async_session = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
 
-engine = create_engine(DATABASE_URL)
+Base = declarative_base()
 
 
-def init_db():
-    SQLModel.metadata.create_all(engine)
+async def get_session() -> AsyncSession:
+    async with async_session() as session:
+        yield session
 
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-def get_session():
-    session = next(get_session())
-    return session

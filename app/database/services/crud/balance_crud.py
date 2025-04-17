@@ -1,24 +1,34 @@
-from sqlmodel import Session, select
-from typing import Optional, List
-from app.models.Transaction import Balance
+from lesson_2.app.models.Transaction import Transaction
+from sqlmodel import select, func
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 class BalanceCRUD:
-    def __init__(self, session: Session):
+    def __init__(self, session: AsyncSession):
         self.session = session
 
-    def get(self, balance_id: int) -> Optional[Balance]:
-        return self.session.get(Balance, balance_id)
+    async def get_balance(self, user_id: str) -> float:
+        """Получение текущего баланса"""
+        statement = select(func.coalesce(func.sum(Transaction.amount), 0.0)).where(
+            Transaction.user_id == user_id
+        )
+        result = await self.session.exec(statement)
+        return result.one()
 
-    def get_by_user(self, user_id: int) -> Optional[Balance]:
-        statement = select(Balance).where(Balance.user_id == user_id)
-        return self.session.exec(statement).first()
-
-    def update(self, balance_id: int, amount: float) -> Optional[Balance]:
-        db_balance = self.get(balance_id)
-        if not db_balance:
-            return None
-        db_balance.amount = amount
-        self.session.add(db_balance)
-        self.session.commit()
-        self.session.refresh(db_balance)
-        return db_balance
+    async def make_transaction(
+        self,
+        user_id: str,
+        amount: float,
+        type: str,
+        description: str
+    ) -> Transaction:
+        """Создание транзакции"""
+        transaction = Transaction(
+            user_id=user_id,
+            amount=amount,
+            type=type,
+            description=description
+        )
+        self.session.add(transaction)
+        await self.session.commit()
+        await self.session.refresh(transaction)
+        return transaction

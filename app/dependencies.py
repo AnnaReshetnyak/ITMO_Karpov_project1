@@ -1,9 +1,11 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session
-from app.database.services.crud.user_crud import UserCRUD
-from app.database.database import get_session
-from app.models import User
+from lesson_2.app.database.services.crud.user_crud import UserCRUD
+from lesson_2.app.database.services.crud.prediction import PredictionCRUD
+from lesson_2.app.database.database import get_session
+from lesson_2.app.models import User
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
@@ -21,3 +23,9 @@ def get_current_user(
             detail="Invalid authentication credentials",
         )
     return user
+
+async def get_crud(
+    session: AsyncSession = Depends(get_session)
+) -> PredictionCRUD:
+    """Возвращает экземпляр CRUD-класса для предсказаний"""
+    return PredictionCRUD(session)

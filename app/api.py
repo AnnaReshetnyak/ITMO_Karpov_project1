@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import auth, users, predictions, balance
+from app.routers import auth, users, predictions, balance, routes, web
 from database.database import init_db
 import uvicorn
 
@@ -10,6 +10,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(predictions.router)
 app.include_router(balance.router)
+app.include_router(web.router)
 
 
 @app.on_event("startup")

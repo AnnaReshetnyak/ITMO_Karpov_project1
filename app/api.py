@@ -44,6 +44,37 @@ async def log_requests(request: Request, call_next):
     
     return response
 
+logging.config.dictConfig({
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard"
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "app.log",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 5,
+            "formatter": "standard"
+        }
+    },
+    "loggers": {
+        "app": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False
+        }
+    }
+})
+
 
 app.include_router(home2.router)
 app.include_router(auth.router)

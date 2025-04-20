@@ -4,19 +4,48 @@ from database.database import init_db
 import uvicorn
 import os
 from fastapi.staticfiles import StaticFiles
+import logging
+from fastapi import FastAPI, Request
 
+# Настройка логгера
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-app = FastAPI()
+# Создаем обработчик для консоли
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# Форматтер для логов
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+console_handler.setFormatter(formatter)
+
+# Добавляем обработчик к логгеру
+logger.addHandler(console_handler)
+
+app = FastAPI(title="ML Prediction Service", version="1.0.0")
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    print(f"Request received: {request.method} {request.url.path}")
-    response = await call_next(request)
-    print(f"Response status: {response.status_code}")
+    logger.info(f"Request received: {request.method} {request.url.path}")
+    
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        logger.error(f"Request error: {str(e)}", exc_info=True)
+        raise
+    
+    logger.info(
+        f"Response status: {response.status_code} | "
+        f"Client: {request.client.host} | "
+        f"Path: {request.url.path}"
+    )
+    
     return response
 
 
-app.include_router(home.router)
+app.include_router(home2.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(predictions.router)

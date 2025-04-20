@@ -1,8 +1,7 @@
-from fastapi import FastAPI, Request
+
 from lesson_2.app.routers import home2, auth, users, predictions, balance, routes, web
 from database.database import init_db
 import uvicorn
-import os
 from fastapi.staticfiles import StaticFiles
 import logging
 from fastapi import FastAPI, Request

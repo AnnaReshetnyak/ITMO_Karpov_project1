@@ -6,6 +6,19 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from pathlib import Path
+from logging.handlers import RotatingFileHandler
+
+logging.basicConfig(
+    handlers=[
+        RotatingFileHandler(
+            'predictions.log',
+            maxBytes=10*1024*1024,  # 10 MB
+            backupCount=5
+        )
+    ],
+    format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+    level=logging.INFO
+)
 
 current_dir = Path(__file__).parent
 templates_path = current_dir.parent.parent / "view" / "templates"

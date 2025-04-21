@@ -2,6 +2,30 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import  AmqpDsn
 from typing import Optional
 import logging
+from fastapi import APIRouter, Request, Depends
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
+
+logging.basicConfig(
+    handlers=[
+        RotatingFileHandler(
+            'predictions.log',
+            maxBytes=10*1024*1024,  # 10 MB
+            backupCount=5
+        )
+    ],
+    format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+    level=logging.INFO
+)
+
+current_dir = Path(__file__).parent
+templates_path = current_dir.parent.parent / "view" / "templates"
+
+router = APIRouter(tags=["web"])
+templates = Jinja2Templates(directory=str(templates_path))
+
 
 
 class Settings(BaseSettings):
@@ -92,3 +116,4 @@ def get_rabbitmq_settings() -> RabbitMQSettings:
 
 def get_app_settings() -> AppSettings:
     return AppSettings()
+

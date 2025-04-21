@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="error-container">
+    <h1>Ошибка {{ status_code }}</h1>
+    <p>{{ detail }}</p>
+    <a href="{{ url_for('web_index') }}" class="btn">На главную</a>
+</div>
+{% endblock %}

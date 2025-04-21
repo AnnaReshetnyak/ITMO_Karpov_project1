@@ -131,7 +131,7 @@ services:
     networks:
       - app-network
 
-    tests:
+  tests:
     build: .
     command: pytest tests/
     depends_on:

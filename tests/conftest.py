@@ -8,6 +8,17 @@ from sqlmodel import SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 from lesson_2.app.database.database import engine
 
+pytest_plugins = [
+    "tests.fixtures.database",
+    "tests.fixtures.auth",
+    "tests.fixtures.models"
+]
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_environment():
+    import os
+    os.environ["ENVIRONMENT"] = "TEST"
+    os.environ["DATABASE_URL"] = "sqlite:///test.db"
 
 
 @pytest.fixture(name="db_session")

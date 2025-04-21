@@ -131,6 +131,16 @@ services:
     networks:
       - app-network
 
+    tests:
+    build: .
+    command: pytest tests/
+    depends_on:
+      - database
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:password@database:5432/testdb
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge

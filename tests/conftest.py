@@ -59,6 +59,10 @@ async def db_engine():
     yield engine
     engine.dispose()
 
+@pytest.fixture(scope="module", autouse=True)
+def init():
+    init_db()
+
 
 @pytest.fixture
 async def db_session(db_engine):

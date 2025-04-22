@@ -77,24 +77,21 @@ services:
       timeout: 5s
       retries: 5
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
-    depends_on:
-      database:
-        condition: service_healthy
+
+  db-admin:
+    image: adminer:latest
+    container_name: adminer
     ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: database
+    depends_on:
+      - database
     networks:
       - app-network
 
   ml-model:
-    build: ./ml-service/
+    build: ./ml/
     image: ml-model:latest
     container_name: ml-model
     restart: unless-stopped
@@ -134,10 +131,15 @@ services:
     networks:
       - app-network
 
-networks:
-  app-network:
-    driver: bridge
-
+  tests:
+    build: .
+    command: pytest tests/
+    depends_on:
+      - database
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:password@database:5432/testdb
+    networks:
+      - app-network
 
 volumes:
   postgres_data:

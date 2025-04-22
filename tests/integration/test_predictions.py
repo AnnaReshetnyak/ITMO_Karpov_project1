@@ -1,16 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
 from lesson_2.main import app
-from lesson_2.app.database.database import init_db
 from unittest.mock import AsyncMock, patch
 
 
 client = TestClient(app)
 
-
-@pytest.fixture(scope="module", autouse=True)
-def init():
-    init_db()
 
 
 def test_prediction_flow():

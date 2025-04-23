@@ -1,5 +1,6 @@
-from lesson_2.app.routers import home2, auth, users, predictions, balance, routes, web
-from database.database import init_db
+
+from app.routers import home2, auth, users, predictions, balance, routes, web
+from app.database.database import init_db
 import uvicorn
 import os
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +9,18 @@ import logging.config
 from logging.handlers import RotatingFileHandler
 from fastapi import FastAPI, Request
 from uuid import uuid4
+from fastapi.middleware.cors import CORSMiddleware
+
 os.makedirs("logs", exist_ok=True)
+
+app = FastAPI(title="ML Prediction Service", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Конфигурация логгера должна быть ПЕРВОЙ перед созданием приложения
 logging.config.dictConfig({
@@ -62,9 +74,6 @@ logging.config.dictConfig({
         }
     }
 })
-
-app = FastAPI(title="ML Prediction Service", version="1.0.0")
-
 
 # Middleware должен быть объявлен до регистрации роутеров
 @app.middleware("http")
@@ -132,10 +141,11 @@ def on_startup():
 
 if __name__ == '__main__':
     uvicorn.run(
-        'api:app',
+        'main:app',
         host='0.0.0.0',
         port=8000,
         reload=True,
         # Логирование сервера тоже можно настроить
         log_config=None  # Используем свою конфигурацию
     )
+

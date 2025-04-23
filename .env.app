@@ -1,4 +1,7 @@
-DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
-RABBITMQ_URL=amqp://admin:securepassword@rabbitmq:5672/
+APP_PORT=8000
+RABBITMQ_URL=amqp://admin:password@rabbitmq:5672/
 DEBUG=false
-SECRET_KEY=your-secret-key
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=secret
+POSTGRES_DB=my_database
+DATABASE_URL=postgresql+asyncpg://admin:secret@database/my_database

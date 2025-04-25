@@ -12,4 +12,4 @@ def validate_prediction_input(data: dict):
     except ValidationError as e:
         raise HTTPException(
             status_code=422,
-            detail=e.errors()
+            detail=e.errors())

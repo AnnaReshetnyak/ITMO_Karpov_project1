@@ -1,6 +1,5 @@
-
-from app.routers import home2, auth, users, predictions, balance, routes, web
-from app.database.database import init_db
+from lesson_2.app.routers import home2, auth, users, predictions, balance, routes, web
+from lesson_2.app.database.database import init_db
 import uvicorn
 import os
 from fastapi.staticfiles import StaticFiles
@@ -75,6 +74,8 @@ logging.config.dictConfig({
     }
 })
 
+
+
 # Middleware должен быть объявлен до регистрации роутеров
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
@@ -135,8 +136,9 @@ app.include_router(web.router)
 
 # Инициализация БД
 @app.on_event("startup")
-def on_startup():
-    init_db()
+async def on_startup():
+    await init_db()
+
 
 
 if __name__ == '__main__':
@@ -148,4 +150,5 @@ if __name__ == '__main__':
         # Логирование сервера тоже можно настроить
         log_config=None  # Используем свою конфигурацию
     )
+
 

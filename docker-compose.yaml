@@ -2,28 +2,37 @@ version: "3.8"
 
 services:
   app:
-    ports:
-      - "8000:8000"
-    build: ./app/
-    image: python:3.9-slim
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: my-app  # Уникальное имя для локального образа
+    environment:
+      - PYTHONPATH=/usr/src/app
     container_name: balance-app
     restart: unless-stopped
-    volumes:
-      - ./app:/app
-    working_dir: /app
+    ports:
+      - "8000:8000"
     env_file:
       - .env.app
-    environment:
-      - UVICORN_HOST=0.0.0.0
-      - UVICORN_PORT=8000
     depends_on:
       rabbitmq:
         condition: service_healthy
       database:
         condition: service_healthy
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
-    expose:
-      - "8000"
+    networks:
+      app-network:
+        aliases:
+          - app.local
+
+  migrations:
+    image: my-app  # Используем тот же локальный образ
+    command: sh -c "alembic -c alembic.ini upgrade head"
+    depends_on:
+      app:  # Добавляем зависимость от сервиса app
+        condition: service_started
+      database:
+        condition: service_healthy
+    env_file: .env.app
     networks:
       - app-network
 
@@ -40,13 +49,13 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://app:8000" ]
+      test: ["CMD", "curl", "-f", "http://app:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   rabbitmq:
-    image: rabbitmq:4.1.0-beta.5-alpine
+    image: rabbitmq:3.12-management-alpine
     container_name: rabbitmq-broker
     ports:
       - "5672:5672"
@@ -58,11 +67,10 @@ services:
       RABBITMQ_DEFAULT_PASS: securepassword
     restart: on-failure
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 30s
 
   database:
     image: postgres:13-alpine
@@ -72,11 +80,12 @@ services:
     env_file:
       - .env.db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
       interval: 5s
       timeout: 5s
-      retries: 5
-
+      retries: 10
+    networks:
+      - app-network
 
   db-admin:
     image: adminer:latest
@@ -91,8 +100,9 @@ services:
       - app-network
 
   ml-model:
-    build: ./ml/
-    image: ml-model:latest
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
     container_name: ml-model
     restart: unless-stopped
     environment:
@@ -100,51 +110,58 @@ services:
       - RABBITMQ_URL=amqp://admin:securepassword@rabbitmq-broker:5672/
       - BATCH_SIZE=32
       - DEVICE=cpu
+      - HF_HOME=/app/hf-cache
     volumes:
-      - ./ml-service/models:/app/models
-      - ./ml-service/config:/app/config
+      - ./ml/models:/app/models
+      - ./ml/config:/app/config
+      - huggingface_cache:/app/hf-cache
     networks:
       - app-network
     depends_on:
       rabbitmq:
         condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 8G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://ml-model:8500/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8500/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   ml-worker:
+    build: ./ml
     image: ml-model:latest
     command: ["python", "worker.py"]
-    deploy:
-      replicas: 3
-    environment:
-      - WORKER_TYPE=high_priority
     depends_on:
       - ml-model
-      - rabbitmq
     networks:
       - app-network
 
   tests:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.test
     command: pytest tests/
     depends_on:
       - database
+      - rabbitmq
+      - ml-model
     environment:
-      DATABASE_URL: postgresql+asyncpg://user:password@database:5432/testdb
+      - DATABASE_URL=postgresql+asyncpg://user:password@database:5432/testdb
+      - ENVIRONMENT=TEST
+    volumes:
+      - ./tests:/app/tests
+      - ./app:/app
     networks:
       - app-network
 
 volumes:
   postgres_data:
   rabbitmq_data:
-  model_volume:
+  huggingface_cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./hf-cache
 
 networks:
   app-network:

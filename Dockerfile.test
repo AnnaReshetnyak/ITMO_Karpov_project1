@@ -1,0 +1,24 @@
+FROM python:3.10-slim
+
+# Создаем системного пользователя
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /home/appuser/.cache/huggingface/hub && \
+    chown -R appuser:appuser /home/appuser
+
+USER appuser
+
+WORKDIR /app
+
+# Копируем зависимости
+COPY requirements.txt .
+
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r requirements.txt pytest pytest-asyncio httpx
+
+
+# Копируем исходный код
+COPY . .
+
+# Указываем точку входа для тестов
+CMD ["pytest", "tests/", "--cov=app", "--cov-report=html"]
+

@@ -5,14 +5,19 @@ import aio_pika
 from aio_pika.abc import AbstractIncomingMessage
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from lesson_2.app.database.config import settings
+import lesson_2.app.main
+from lesson_2.app.config import settings
 from lesson_2.app.database.services.crud.prediction import PredictionCRUD
 from lesson_2.app.database.database import get_session
 from lesson_2.app.schemas import TaskStatus
-from lesson_2.app.ml.model import model
-from lesson_2.app.ml.validation import validate_prediction_input
+from lesson_2.ml.model import model
+from lesson_2.ml.validation import validate_prediction_input
+from lesson_2.app.config import get_rabbitmq_settings
 
 logger = logging.getLogger(__name__)
+
+settings = get_rabbitmq_settings()
+RABBITMQ_URL = settings.AMQP_URL
 
 
 async def process_message(
@@ -81,7 +86,7 @@ async def process_message(
 
 async def start_worker() -> None:
     """Запуск воркера для обработки задач"""
-    connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)
+    connection = await aio_pika.connect_robust(lesson_2.app.main.RABBITMQ_URL)
 
     async with connection:
         channel = await connection.channel()
@@ -103,7 +108,7 @@ async def start_worker() -> None:
 
 if __name__ == "__main__":
     import asyncio
-    from lesson_2.app.database.config import configure_logging
+    from lesson_2.app.config import configure_logging
 
     configure_logging()
     asyncio.run(start_worker())

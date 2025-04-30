@@ -1,4 +1,4 @@
-from lesson_2.app.database.models import User, Balance
+from database.models import User, Balance
 
 
 def test_user_relationships():

@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 from typing import List, Optional
-from app.models.MLSegment import MLModel
-from app.schemas import MLModelCreate, MLModelUpdate
+from database.models import MLModel
+from schemas import MLModelCreate, MLModelUpdate
 
 class MLModelCRUD:
     def __init__(self, session: Session):

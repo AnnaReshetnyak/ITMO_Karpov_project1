@@ -1,8 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
-from typing import Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
-
+from typing import Optional, Dict, Any, Union
 # --------------------------
 # Базовый конфиг для всех схем
 # --------------------------
@@ -11,7 +10,6 @@ class BaseSchema(BaseModel):
         from_attributes=True,  # заменяет orm_mode
         protected_namespaces=()  # отключает проверку protected namespaces
     )
-
 # --------------------------
 # User Schemas
 # --------------------------
@@ -31,11 +29,9 @@ class UserUpdate(UserBase):
 class UserOut(UserBase):
     id: int
     created_at: datetime
-
 # --------------------------
 # Balance Schemas
 # --------------------------
-
 class BalanceOperation(BaseModel):
     amount: float
     description: str
@@ -62,11 +58,9 @@ class TopUpRequest(BaseModel):
 
 class BalanceResponse(BaseModel):
     balance: float
-
 # --------------------------
 # Transaction Schemas
 # --------------------------
-
 class TransactionBase(BaseSchema):
     amount: float = Field(..., gt=0, example=100.0)
     transaction_type: str = Field(..., example="deposit")
@@ -84,11 +78,9 @@ class TransactionOut(TransactionBase):
     user_id: int
     created_at: datetime
     status: str
-
 # --------------------------
 # Transaction History Schemas
 # --------------------------
-
 class TransactionHistoryBase(BaseSchema):
     old_amount: float
     new_amount: float
@@ -102,11 +94,9 @@ class TransactionHistoryOut(TransactionHistoryBase):
     transaction_id: int
     balance_id: int
     created_at: datetime
-
 # --------------------------
 # ML Model Schemas (решение конфликта model_)
 # --------------------------
-
 class MLModelBase(BaseSchema):
     name: str = Field(..., example="Credit Scoring Model")
     description: Optional[str] = Field(None, example="Predicts creditworthiness")
@@ -125,11 +115,9 @@ class MLModelOut(MLModelBase):
     owner_id: int
     created_at: datetime
     is_active: bool
-
 # --------------------------
 # ML Task Schemas
 # --------------------------
-
 class MLTaskBase(BaseSchema):
     input_data: Dict[str, Any] = Field(..., example={"income": 50000, "age": 30})
     priority: int = Field(default=1, ge=1, le=5)
@@ -151,11 +139,9 @@ class MLTaskOut(MLTaskBase):
     status: str
     result: Optional[Dict[str, Any]]
     error_message: Optional[str]
-
 # --------------------------
 # Prediction Schemas
 # --------------------------
-
 class PredictionRequest(BaseModel):
     """Схема для запроса предсказания"""
     input_data: dict = Field(
@@ -184,21 +170,19 @@ class TaskStatus(str, Enum):
     FAILED = "failed"
 
 class TaskResponse(BaseModel):
-    cost: float  # Добавляем поле стоимости
-    remaining_balance: float  # Добавляем остаток баланса
+    cost: float
+    remaining_balance: float
     task_id: str
-    status: TaskStatus  # Используем Enum
-    result: dict | None = None
+    status: TaskStatus
+    result: Optional[dict] = None  # Исправлено для Python 3.9
     created_at: datetime
-    updated_at: datetime | None = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         use_enum_values = True  # Для сериализации значений Enum
-
 # --------------------------
 # Prediction History Schemas
 # --------------------------
-
 class PredictionHistoryBase(BaseSchema):
     input_data: Dict[str, Any] = Field(..., example={"transaction_id": 123})
     result: Dict[str, Any] = Field(..., example={"risk_score": 0.85})
@@ -218,11 +202,9 @@ class PredictionHistoryOut(PredictionHistoryBase):
     task_id: Optional[int]
     created_at: datetime
     feedback: Optional[Dict[str, Any]]
-
 # --------------------------
 # Auth Schemas
 # --------------------------
-
 class Token(BaseSchema):
     access_token: str
     token_type: str

@@ -1,4 +1,6 @@
-FROM python:3.10-slim
+FROM python:3.9-slim
+
+WORKDIR /app
 
 # Создаем системного пользователя
 RUN useradd -m -u 1000 appuser && \
@@ -7,14 +9,12 @@ RUN useradd -m -u 1000 appuser && \
 
 USER appuser
 
-WORKDIR /app
 
 # Копируем зависимости
 COPY requirements.txt .
 
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt pytest pytest-asyncio httpx
-
 
 # Копируем исходный код
 COPY . .

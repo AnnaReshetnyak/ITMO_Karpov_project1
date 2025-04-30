@@ -6,11 +6,11 @@ from fastapi.encoders import jsonable_encoder
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from typing import Union
 import logging
-from lesson_2.app.exceptions import InsufficientFundsError
+from exceptions import InsufficientFundsError
 
 # Инициализация логгера в начале файла
 logger = logging.getLogger(__name__)
-templates = Jinja2Templates(directory="app/web/templates")
+templates = Jinja2Templates(directory="app/view/templates")
 
 
 async def insufficient_funds_handler(

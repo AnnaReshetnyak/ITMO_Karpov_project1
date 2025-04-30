@@ -1,8 +1,8 @@
 import pytest
 from fastapi import status
 from sqlmodel import select
-from lesson_2.app.database.models import User
-from lesson_2.app.schemas import UserCreate
+from database.models import User
+from schemas import UserCreate
 
 
 @pytest.mark.asyncio

@@ -1,10 +1,10 @@
 import pytest
 from sqlmodel import Session, select
-from lesson_2.app.database.models import User, Balance, Transaction
-from lesson_2.app.database.services.crud.user_crud import UserCRUD
-from lesson_2.app.database.services.crud.balance_crud import BalanceCRUD
-from lesson_2.app.exceptions import DuplicateEmailError
-from lesson_2.app.schemas import UserCreate, UserUpdate
+from database.models import User, Balance, Transaction
+from database.services.crud.user_crud import UserCRUD
+from database.services.crud.balance_crud import BalanceCRUD
+from exceptions import DuplicateEmailError
+from schemas import UserCreate, UserUpdate
 
 
 @pytest.mark.asyncio

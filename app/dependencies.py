@@ -1,10 +1,10 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session
-from lesson_2.app.database.services.crud.user_crud import UserCRUD
-from lesson_2.app.database.services.crud.prediction import PredictionCRUD
-from lesson_2.app.database.database import get_session
-from lesson_2.app.models import User
+from database.services.crud.user_crud import UserCRUD
+from database.services.crud.prediction import PredictionCRUD
+from database.database import get_session
+from models import User
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")

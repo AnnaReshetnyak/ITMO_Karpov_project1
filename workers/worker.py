@@ -4,15 +4,13 @@ from datetime import datetime
 import aio_pika
 from aio_pika.abc import AbstractIncomingMessage
 from sqlmodel.ext.asyncio.session import AsyncSession
-
-import lesson_2.app.main
-from lesson_2.app.config import settings
-from lesson_2.app.database.services.crud.prediction import PredictionCRUD
-from lesson_2.app.database.database import get_session
-from lesson_2.app.schemas import TaskStatus
-from lesson_2.ml.model import model
-from lesson_2.ml.validation import validate_prediction_input
-from lesson_2.app.config import get_rabbitmq_settings
+from config import settings
+from database.services.crud.prediction import PredictionCRUD
+from database.database import get_session
+from schemas import TaskStatus
+from ml.model import model
+from ml.validation import validate_prediction_input
+from app.config import get_rabbitmq_settings
 
 logger = logging.getLogger(__name__)
 

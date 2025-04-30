@@ -1,13 +1,13 @@
-from app.database.config import get_db_settings
-from app.database.database import get_session, init_db, engine
+from database.config import get_db_settings
+from database.database import get_session, init_db, engine
 from database.services.crud.user import get_all_users, create_user
 from sqlmodel import Session
-from app.models.User import User
+from models.User import User
 
 if __name__ == "__main__":
-    test_user = User(email='test@mail.ru', password='test')
-    test_user_2 = User(email='test@mail.ru', password='test')
-    test_user_3 = User(email='test@mail.ru', password='test')
+    test_user = User(email='test1@mail.ru', password='test')
+    test_user_2 = User(email='test2@mail.ru', password='test')
+    test_user_3 = User(email='test3@mail.ru', password='test')
 
     settings = get_db_settings()
     print(settings.DB_HOST)

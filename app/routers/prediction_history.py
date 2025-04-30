@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
-from app.database.services.crud.prediction_history import PredictionHistoryCRUD
-from app.database.database import get_session
-from app.schemas import PredictionHistoryCreate, PredictionHistoryOut
+from database.services.crud.prediction_history import PredictionHistoryCRUD
+from database.database import get_session
+from schemas import PredictionHistoryCreate, PredictionHistoryOut
 
 prediction_history_router = APIRouter()
 

@@ -1,11 +1,13 @@
 from sqlmodel import create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
-from lesson_2.app.database.config import get_settings
+from database.config import get_settings
 from sqlalchemy.orm import sessionmaker, declarative_base
+from database.config import get_db_settings
+from sqlalchemy.ext.asyncio import create_async_engine
 
 # Настройка асинхронного движка
-engine = create_engine(
-    get_settings.DATABASE_URL,
+engine = create_async_engine(
+    str(get_db_settings().DATABASE_URL),
     echo=True,
     future=True
 )

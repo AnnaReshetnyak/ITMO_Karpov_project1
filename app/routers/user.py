@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from app.database.database import get_session
-from app.models.User import User
-from app.database.services.crud import user_crud as UserService
+from database.database import get_session
+from models.User import User
+from database.services.crud import user_crud as UserService
 from typing import List
 
 

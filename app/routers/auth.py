@@ -1,9 +1,9 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session
-from lesson_2.app.database.database import get_session
-from lesson_2.app.schemas import UserCreate, Token
-from lesson_2.app.database.services.crud.user_crud import UserCRUD
+from database.database import get_session
+from schemas import UserCreate, Token
+from database.services.crud.user_crud import UserCRUD
 from fastapi.security import OAuth2PasswordRequestForm
 
 # Инициализация логгера

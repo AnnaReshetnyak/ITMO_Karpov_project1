@@ -16,7 +16,7 @@ class DatabaseSettings(BaseSettings):
             username=self.POSTGRES_USER,
             password=self.POSTGRES_PASSWORD,
             host=self.POSTGRES_HOST,
-            port=str(self.POSTGRES_PORT),
+            port=int(self.POSTGRES_PORT),
             path=self.POSTGRES_DB,
         )
 

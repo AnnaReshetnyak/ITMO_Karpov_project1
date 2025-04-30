@@ -1,7 +1,7 @@
 from sqlmodel import Session
-from app.database.services.crud import UserCRUD, BalanceCRUD, TransactionCRUD
-from app.models.User import User
-from app.models.Transaction import Transaction
+from database.services.crud import UserCRUD, BalanceCRUD, TransactionCRUD
+from models.User import User
+from models.Transaction import Transaction
 
 
 def create_demo_users(session: Session):

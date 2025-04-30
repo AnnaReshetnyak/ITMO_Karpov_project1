@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from lesson_2.app.rabbitmq.producer import send_prediction_task
-from lesson_2.app.database.services.crud.prediction import PredictionCRUD
-from lesson_2.app.database.services.crud.balance_crud import BalanceCRUD
-from lesson_2.app.models import User
-from lesson_2.app.schemas import PredictionRequest, TaskResponse
-from lesson_2.app.dependencies import get_current_user, get_crud
+
+from database.database import get_session
+from sqlalchemy.ext.asyncio import AsyncSession
+from rabbitmq.producer import send_prediction_task
+from database.services.crud.prediction import PredictionCRUD
+from database.services.crud.balance_crud import BalanceCRUD
+from models import User
+from schemas import PredictionRequest, TaskResponse
+from dependencies import get_current_user, get_crud
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,9 +17,12 @@ router = APIRouter(tags=["predictions"])
 async def create_prediction(
         request: PredictionRequest,
         user: User = Depends(get_current_user),
-        prediction_crud: PredictionCRUD = Depends(get_crud(PredictionCRUD)),
-        balance_crud: BalanceCRUD = Depends(get_crud(BalanceCRUD))
-):
+
+        session: AsyncSession = Depends(get_session)
+    ):
+    prediction_crud = PredictionCRUD(session),
+    balance_crud = BalanceCRUD(session)
+
     logger.info(
         f"Starting prediction request | User: {user.id} | "
         f"Input data size: {len(str(request.input_data))}"

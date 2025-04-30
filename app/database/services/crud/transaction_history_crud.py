@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 from typing import List, Optional
-from app.models.Transaction import TransactionHistory
+from database.models import TransactionHistory
 
 class TransactionHistoryCRUD:
     def __init__(self, session: Session):

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
-from lesson_2.app.security.csrf import generate_csrf_token
-from lesson_2.app.config import settings
+from security.csrf import generate_csrf_token
+from config import settings
 import logging
 
 router = APIRouter(tags=["web"], include_in_schema=False)

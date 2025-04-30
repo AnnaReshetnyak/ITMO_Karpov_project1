@@ -1,4 +1,4 @@
-from lesson_2.app.models.Transaction import Transaction
+from database.models import Transaction
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 

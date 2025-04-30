@@ -1,15 +1,14 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from lesson_2.app.database.services.crud.user_crud import UserCRUD
-from lesson_2.main import app
-from lesson_2.app.database.database import get_session, init_db
-from sqlmodel import Session, SQLModel, create_engine
+from database.services.crud.user_crud import UserCRUD
+from app.main import app
+from database.database import get_session, init_db
+from sqlmodel import Session
 from sqlmodel.pool import StaticPool
 from sqlmodel import SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
-from lesson_2.app.database.database import engine
-from lesson_2.app.database.models import User, Balance, MLModel
+from database.models import User, Balance, MLModel
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():

@@ -1,9 +1,9 @@
 from sqlmodel import SQLModel, Field, Column
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Enum as SQLEnum, JSON
 from datetime import datetime
 from uuid import UUID, uuid4
 from typing import Optional
-from lesson_2.app.schemas import TaskStatus
+from schemas import TaskStatus
 
 class MLTaskBase(SQLModel):
     cost: float = Field(default=0.0, ge=0)

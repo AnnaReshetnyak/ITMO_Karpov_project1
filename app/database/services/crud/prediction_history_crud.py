@@ -1,7 +1,7 @@
 from sqlmodel import Session, select, desc
 from typing import List, Optional, Dict, Any
-from app.models.MLSegment import PredictionHistory
-from app.schemas import PredictionHistoryCreate, PredictionHistoryUpdate
+from database.models import PredictionHistory
+from schemas import PredictionHistoryCreate, PredictionHistoryUpdate
 
 
 class PredictionHistoryCRUD:

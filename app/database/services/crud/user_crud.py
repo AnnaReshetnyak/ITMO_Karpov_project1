@@ -1,13 +1,12 @@
 from sqlmodel import Session, select
 from typing import Optional, List
-from lesson_2.app.models.User import User
-from lesson_2.app.schemas import UserCreate, UserUpdate
-
+from database.models import User
+from schemas import UserCreate, UserUpdate
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from passlib.context import CryptContext
-from lesson_2.app.exceptions import DuplicateEmailError
-from lesson_2.app.models import User  
+from exceptions import DuplicateEmailError
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 from typing import List, Optional
-from app.models.MLSegment import MLTask
-from app.schemas import MLTaskCreate, MLTaskUpdate
+from database.models import MLTask
+from schemas import MLTaskCreate, MLTaskUpdate
 
 class MLTaskCRUD:
     def __init__(self, session: Session):

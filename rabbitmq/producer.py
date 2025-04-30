@@ -1,6 +1,6 @@
 import aio_pika
 import json
-from lesson_2.app.database.config import settings
+from config import settings
 
 async def send_prediction_task(task_data: dict):
     connection = await aio_pika.connect_robust(settings.RABBITMQ_URL)

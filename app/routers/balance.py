@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 import logging
-from lesson_2.app.database.database import get_session
-from lesson_2.app.schemas import BalanceResponse, TopUpRequest
-from lesson_2.app.dependencies import get_current_user
-from lesson_2.app.database.services.crud.balance_crud import BalanceCRUD
-from lesson_2.app.database.services.crud.transaction_crud import TransactionCRUD
-from lesson_2.app.models import User
+from database.database import get_session
+from schemas import BalanceResponse, TopUpRequest
+from dependencies import get_current_user
+from database.services.crud.balance_crud import BalanceCRUD
+from database.services.crud.transaction_crud import TransactionCRUD
+from models import User
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/balance", tags=["balance"])

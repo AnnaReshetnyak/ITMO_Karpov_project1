@@ -1,6 +1,6 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
-from lesson_2.app.models.task import MLTask
-from lesson_2.app.schemas import TaskStatus
+from database.models import MLTask
+from schemas import TaskStatus
 from datetime import datetime
 
 class PredictionCRUD:

@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import  AmqpDsn
+from pydantic import AmqpDsn
 from typing import Optional
 import logging
 from fastapi import APIRouter, Request, Depends
@@ -21,19 +21,16 @@ logging.basicConfig(
 )
 
 current_dir = Path(__file__).parent
-templates_path = current_dir.parent.parent / "view" / "templates"
 
 router = APIRouter(tags=["web"])
-templates = Jinja2Templates(directory=str(templates_path))
-
-
 
 class Settings(BaseSettings):
     RABBITMQ_URL: str = "amqp://admin:securepassword@rabbitmq-broker/"
     RABBITMQ_QUEUE: str = "prediction_tasks"
-
+    TEMPLATES_DIR: str = str(current_dir.parent.parent / "view" / "templates")
 
 settings = Settings()
+templates = Jinja2Templates(directory=settings.TEMPLATES_DIR)
 
 def configure_logging():
     logging.basicConfig(
@@ -60,12 +57,11 @@ class DatabaseSettings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
-        case_sensitive=False  # Игнорировать регистр переменных
+        case_sensitive=False
     )
 
 def get_settings() -> DatabaseSettings:
     return DatabaseSettings()
-
 
 class MLServiceSettings(BaseSettings):
     ML_API_KEY: Optional[str] = None
@@ -101,7 +97,7 @@ class RabbitMQSettings(BaseSettings):
 class AppSettings(BaseSettings):
     DEBUG: bool = False
     SECRET_KEY: str = "your-secret-key-here"
-    TOKEN_EXPIRE_MINUTES: int = 1440  # 24 часа
+    TOKEN_EXPIRE_MINUTES: int = 1440
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -116,4 +112,3 @@ def get_rabbitmq_settings() -> RabbitMQSettings:
 
 def get_app_settings() -> AppSettings:
     return AppSettings()
-

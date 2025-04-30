@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 from typing import List, Optional
-from app.models import Transaction
+from database.models import Transaction
 
 class TransactionCRUD:
     def __init__(self, session: Session):

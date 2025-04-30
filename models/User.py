@@ -1,5 +1,8 @@
 import bcrypt
 from typing import List, Dict
+from database.models import TransactionHistory
+from database.models import Balance
+
 
 class User:
     def __init__(self, user_id: int, username: str, email: str, password: str):

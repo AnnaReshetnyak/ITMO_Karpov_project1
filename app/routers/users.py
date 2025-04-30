@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, status, Security, Request, HTTPException
 from sqlmodel import Session
-from lesson_2.app.database.database import get_session
-from lesson_2.app.exceptions import DuplicateEmailError
-from lesson_2.app.models import User
-from lesson_2.app.schemas import UserUpdate, UserCreate
-from lesson_2.app.dependencies import get_current_user
-from lesson_2.app.database.services.crud.user_crud import UserCRUD
+from database.database import get_session
+from exceptions import DuplicateEmailError
+from models import User
+from schemas import UserUpdate, UserCreate
+from dependencies import get_current_user
+from database.services.crud.user_crud import UserCRUD
 import logging
 from typing import List
 
